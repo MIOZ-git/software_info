@@ -70,7 +70,7 @@ def open_link1():
     
 def exit_program():
     root.destroy()
-
+    
 # Размещаем кнопку с отступом
 button_show_all = ttk.Button(root, text="Установленные программы (Машина)", command=display_all_info)
 button_show_all.pack(anchor="n", fill=X)  
