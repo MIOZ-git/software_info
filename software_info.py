@@ -1,5 +1,5 @@
+from os import supports_dir_fd
 import tkinter as tk
-from tkinter import messagebox
 from tkinter import *
 from tkinter import ttk
 import winreg
@@ -21,7 +21,10 @@ scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 scrollbar.config(command=software_info.yview)
 software_info.config(yscrollcommand=scrollbar.set)
 
-# функция для получения списка установленных программ для программного и машинного контекстов
+program_number_entry = tk.Entry(root)
+program_number_entry.pack()
+
+#создание функции по фильтрации параметров 
 def get_installed_software(root_key, software_dir):
     software_list = []
     with winreg.OpenKey(root_key, software_dir) as key:
@@ -32,7 +35,13 @@ def get_installed_software(root_key, software_dir):
                 with winreg.OpenKey(key, sub_key_name) as sub_key:
                     try:
                         software_name = winreg.QueryValueEx(sub_key, "DisplayName")[0]
-                        software_list.append(software_name)
+                        version = winreg.QueryValueEx(sub_key, "DisplayVersion")[0]
+                        publisher = winreg.QueryValueEx(sub_key, "Publisher")[0]
+                        #uninstall = winreg.QueryValueEx(sub_key, "UninstallString")[0]
+                        #installdate = winreg.QueryValueEx(sub_key, "InstallDate")[0]
+                        #installLoc = winreg.QueryValueEx(sub_key, "InstallLocation")[0]
+                        software_list.append((software_name, version, publisher,))# uninstall, installdate, installLoc))
+                        #info_list.append((software_name, version, publisher, uninstall, installdate, installLoc))
                     except OSError:
                         pass
                 index += 1
@@ -41,8 +50,37 @@ def get_installed_software(root_key, software_dir):
     return software_list
 
 def display_installed_software(software_list):
-    for i, (software_name) in enumerate(software_list, start=1):
-        software_info.insert(tk.END, f"{i}. {software_name}\n")
+    selected_program_number = program_number_entry.get()  # Получаем порядковый номер из Entry
+
+    if not selected_program_number:  # Если поле пустое, выводим все программы с номерами
+        software_info.delete('1.0', tk.END)  # Очищаем текстовое поле
+        for idx, program in enumerate(software_list, start=1):
+            software_info.insert(tk.END, f"{idx}. {program[0]}\n")
+    else:
+        selected_program_number = int(selected_program_number)
+        if selected_program_number > 0 and selected_program_number <= len(software_list):
+            selected_program = software_list[selected_program_number-1]
+            software_info.delete('1.0', tk.END)  # Очищаем текстовое поле
+
+            # Выводим информацию о выбранной программе с разными цветами шрифта
+            software_info.tag_configure("program_name", foreground="blue")
+            software_info.tag_configure("version", foreground="green")
+            software_info.tag_configure("publisher", foreground="green")
+            # software_info.tag_configure("uninstall", foreground="red")
+            # software_info.tag_configure("installdate", foreground="red")
+            # software_info.tag_configure("installLoc", foreground="red")
+
+
+            software_info.insert(tk.END, f"Название программы: {selected_program[0]}\n", "program_name")
+            software_info.insert(tk.END, f"Версия: {selected_program[1]}\n", "version")
+            software_info.insert(tk.END, f"Издатель: {selected_program[2]}\n", "publisher")
+            # software_info.insert(tk.END, f"Деинстолятор: {selected_program[3]}\n", "uninstall")
+            # software_info.insert(tk.END, f"Дата установки формата ГодМесяцДень: {selected_program[4]}\n", "installdate")
+            # software_info.insert(tk.END, f"Путь куда установленно ПО: {selected_program[5]}\n", "installLoc")
+        else:
+            software_info.delete('1.0', tk.END)  # Очищаем текстовое поле
+            software_info.insert(tk.END, "Ошибка: Некорректный порядковый номер программы\n")
+
 
 def display_all_info():
     software_info.delete('1.0', tk.END)  # Очищаем текстовое поле
@@ -63,17 +101,16 @@ def display_user_info():
     sorted_list_user = sorted(installed_software_user, key=lambda x: x[0])
     software_info.insert(tk.END, "Установленные программы (Пользователь):\n")
     display_installed_software(sorted_list_user)
-    
+
 def open_link1():
     url = "https://github.com/MIOZ-git/software_info"
     webbrowser.open(url)
-    
+
 def exit_program():
     root.destroy()
-    
-# Размещаем кнопку с отступом
+
 button_show_all = ttk.Button(root, text="Установленные программы (Машина)", command=display_all_info)
-button_show_all.pack(anchor="n", fill=X)  
+button_show_all.pack(anchor="n", fill=X)
 
 button_show_user = ttk.Button(root, text="Установленные программы (Пользователь)", command=display_user_info)
 button_show_user.pack(anchor="n",fill=X)
@@ -81,7 +118,6 @@ button_show_user.pack(anchor="n",fill=X)
 button_open_link1 = ttk.Button(root, text="Актуальная версия на GIThub", command=open_link1)
 button_open_link1.pack(anchor="n", fill=X)
 
-# Кнопка для выхода из программы
 button4 = Button(root, text="Выход", command=exit_program)
 button4.pack(anchor="s",pady=10)
 
