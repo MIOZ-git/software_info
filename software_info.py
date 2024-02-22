@@ -1,3 +1,4 @@
+from os import supports_dir_fd
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -23,6 +24,7 @@ software_info.config(yscrollcommand=scrollbar.set)
 program_number_entry = tk.Entry(root)
 program_number_entry.pack()
 
+#создание функции по фильтрации параметров 
 def get_installed_software(root_key, software_dir):
     software_list = []
     with winreg.OpenKey(root_key, software_dir) as key:
@@ -35,7 +37,11 @@ def get_installed_software(root_key, software_dir):
                         software_name = winreg.QueryValueEx(sub_key, "DisplayName")[0]
                         version = winreg.QueryValueEx(sub_key, "DisplayVersion")[0]
                         publisher = winreg.QueryValueEx(sub_key, "Publisher")[0]
-                        software_list.append((software_name, version, publisher))
+                        #uninstall = winreg.QueryValueEx(sub_key, "UninstallString")[0]
+                        #installdate = winreg.QueryValueEx(sub_key, "InstallDate")[0]
+                        #installLoc = winreg.QueryValueEx(sub_key, "InstallLocation")[0]
+                        software_list.append((software_name, version, publisher,))# uninstall, installdate, installLoc))
+                        #info_list.append((software_name, version, publisher, uninstall, installdate, installLoc))
                     except OSError:
                         pass
                 index += 1
@@ -59,11 +65,18 @@ def display_installed_software(software_list):
             # Выводим информацию о выбранной программе с разными цветами шрифта
             software_info.tag_configure("program_name", foreground="blue")
             software_info.tag_configure("version", foreground="green")
-            software_info.tag_configure("publisher", foreground="red")
+            software_info.tag_configure("publisher", foreground="green")
+            # software_info.tag_configure("uninstall", foreground="red")
+            # software_info.tag_configure("installdate", foreground="red")
+            # software_info.tag_configure("installLoc", foreground="red")
+
 
             software_info.insert(tk.END, f"Название программы: {selected_program[0]}\n", "program_name")
             software_info.insert(tk.END, f"Версия: {selected_program[1]}\n", "version")
-            software_info.insert(tk.END, f"Издатель: {selected_program[2]}\n")
+            software_info.insert(tk.END, f"Издатель: {selected_program[2]}\n", "publisher")
+            # software_info.insert(tk.END, f"Деинстолятор: {selected_program[3]}\n", "uninstall")
+            # software_info.insert(tk.END, f"Дата установки формата ГодМесяцДень: {selected_program[4]}\n", "installdate")
+            # software_info.insert(tk.END, f"Путь куда установленно ПО: {selected_program[5]}\n", "installLoc")
         else:
             software_info.delete('1.0', tk.END)  # Очищаем текстовое поле
             software_info.insert(tk.END, "Ошибка: Некорректный порядковый номер программы\n")
